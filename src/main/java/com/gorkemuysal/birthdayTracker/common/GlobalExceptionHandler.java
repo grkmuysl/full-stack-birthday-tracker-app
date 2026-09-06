@@ -92,7 +92,7 @@ public class GlobalExceptionHandler {
 	 * @return 401 UNAUTHORIZED problem detail response
 	 * 
 	 */
-	@ExceptionHandler(InvalidCredentialsException.class)
+	@ExceptionHandler(InvalidTokenException.class)
 	public ProblemDetail handleInvalidToken(InvalidTokenException ex) {
 
 		log.warn("Invalid Token error: {}", ex.getMessage());
