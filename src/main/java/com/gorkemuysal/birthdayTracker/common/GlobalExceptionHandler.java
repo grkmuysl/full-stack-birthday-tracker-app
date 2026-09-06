@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.gorkemuysal.birthdayTracker.common.exception.DuplicateResourceException;
 import com.gorkemuysal.birthdayTracker.common.exception.InvalidCredentialsException;
+import com.gorkemuysal.birthdayTracker.common.exception.InvalidTokenException;
 import com.gorkemuysal.birthdayTracker.common.exception.NotFoundException;
 
 
@@ -73,13 +74,31 @@ public class GlobalExceptionHandler {
 	 * @return 401 UNAUTHORIZED problem detail response
 	 * 
 	 */
-	@ExceptionHandler(com.gorkemuysal.birthdayTracker.common.exception.InvalidCredentialsException.class)
+	@ExceptionHandler(InvalidCredentialsException.class)
 	public ProblemDetail handleInvalidCredentials(InvalidCredentialsException ex) {
 
 		log.warn("Authentication failed: {}", ex.getMessage());
 
 		ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, ex.getMessage());
 		problem.setTitle("Invalid credentials");
+		problem.setProperty("timestamp", Instant.now());
+		return problem;
+
+	}
+	
+	/**
+	 * Handles token failures.
+	 * @param ex the invalid token exception contains error message
+	 * @return 401 UNAUTHORIZED problem detail response
+	 * 
+	 */
+	@ExceptionHandler(InvalidCredentialsException.class)
+	public ProblemDetail handleInvalidToken(InvalidTokenException ex) {
+
+		log.warn("Invalid Token error: {}", ex.getMessage());
+
+		ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, ex.getMessage());
+		problem.setTitle("Invalid Token");
 		problem.setProperty("timestamp", Instant.now());
 		return problem;
 
