@@ -11,7 +11,7 @@ public record PersonRequest(
 	        String fullName,
 
 	        @NotNull(message = "The date of birth is required.")
-	        @Past(message = "The date of birth must not be in the past.")
+	        @Past(message = "The date of birth must be in the past.")
 	        LocalDate birthDate,
 
 	        boolean birthYearKnown,
