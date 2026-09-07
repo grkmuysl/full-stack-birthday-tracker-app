@@ -41,14 +41,14 @@ public class Person extends BaseEntity {
 	@Column(nullable = true)
 	private String note;
 	
-	@Column(name = "photo_url" ,nullable = false)
+	@Column(name = "photo_url" ,nullable = true)
 	private String photoUrl;
 	
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "category", nullable = false)
+	@JoinColumn(name = "category_id", nullable = true)
 	private Category category;
 	
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "owner", nullable = false)
+	@JoinColumn(name = "owner_id", nullable = false)
 	private User owner;
 }

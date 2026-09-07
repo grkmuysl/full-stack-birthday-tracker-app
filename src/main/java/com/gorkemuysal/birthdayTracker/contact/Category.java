@@ -1,7 +1,6 @@
 package com.gorkemuysal.birthdayTracker.contact;
 
-import java.time.Instant;
-
+import com.gorkemuysal.birthdayTracker.common.BaseEntity;
 import com.gorkemuysal.birthdayTracker.identity.User;
 
 import jakarta.persistence.Column;
@@ -19,11 +18,11 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "category")
+@Table(name = "categories")
 @Getter
 @Setter
 @NoArgsConstructor
-public class Category {
+public class Category extends BaseEntity{
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
@@ -36,9 +35,6 @@ public class Category {
 	private String color = "#000";
 	
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "owner", nullable = false)
+	@JoinColumn(name = "owner_id", nullable = false)
 	private User owner;
-
-	@Column(name = "created_at" , nullable = false)
-	private Instant createdAt;
 }
