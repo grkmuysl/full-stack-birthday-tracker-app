@@ -78,7 +78,13 @@ public class SecurityConfig {
 				.authorizeHttpRequests(auth -> auth
 						.requestMatchers(HttpMethod.POST, "/api/v1/auth/register", "/api/v1/auth/login",
 								"/api/v1/auth/refresh-token")
-						.permitAll().requestMatchers("/v3/api-docs/**", "/swagger-ui/**").permitAll().anyRequest()
+						.permitAll().requestMatchers(
+							    "/v3/api-docs/**",
+							    "/v3/api-docs",
+							    "/swagger-ui/**",
+							    "/swagger-ui.html",
+							    "/webjars/**"
+							).permitAll().anyRequest()
 						.authenticated())
 				.authenticationProvider(authenticationProvider())
 				.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
