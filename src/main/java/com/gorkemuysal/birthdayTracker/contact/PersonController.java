@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -18,8 +19,8 @@ import com.gorkemuysal.birthdayTracker.common.PagedResponse;
 import com.gorkemuysal.birthdayTracker.contact.dto.PersonRequest;
 import com.gorkemuysal.birthdayTracker.contact.dto.PersonResponse;
 import com.gorkemuysal.birthdayTracker.identity.User;
+import com.gorkemuysal.birthdayTracker.identity.security.CustomUserDetails;
 
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -31,14 +32,16 @@ public class PersonController {
 	
 	@PostMapping
 	public ResponseEntity<PersonResponse> create(@Valid @RequestBody PersonRequest request,
-			@AuthenticationPrincipal User currentUser) {
+			@AuthenticationPrincipal CustomUserDetails userDetails) {
+		 User currentUser = userDetails.getUser();
 		PersonResponse response = personService.create(request, currentUser);
 		return ResponseEntity.status(HttpStatus.CREATED).body(response);
 	}
 
 	@GetMapping("/{id}")
 	public ResponseEntity<PersonResponse> getById(@PathVariable Long id,
-			@AuthenticationPrincipal User currentUser) {
+			@AuthenticationPrincipal CustomUserDetails userDetails) {
+		 User currentUser = userDetails.getUser();
 		return ResponseEntity.ok(personService.getById(id, currentUser));
 	}
 
@@ -47,19 +50,22 @@ public class PersonController {
 			@RequestParam(required = false) Long category,
 			@RequestParam(required = false) Integer upcomingDays,
 			Pageable pageable,
-			@AuthenticationPrincipal User currentUser) {
+			@AuthenticationPrincipal CustomUserDetails userDetails) {
+		 User currentUser = userDetails.getUser();
 		return ResponseEntity.ok(personService.getAll(category, upcomingDays, pageable, currentUser));
 	}
 
 	@PutMapping("/{id}")
 	public ResponseEntity<PersonResponse> update(@PathVariable Long id,
 			@Valid @RequestBody PersonRequest request,
-			@AuthenticationPrincipal User currentUser) {
+			@AuthenticationPrincipal CustomUserDetails userDetails) {
+		 User currentUser = userDetails.getUser();
 		return ResponseEntity.ok(personService.update(id, request, currentUser));
 	}
 
 	@DeleteMapping("/{id}")
-	public ResponseEntity<Void> delete(@PathVariable Long id, @AuthenticationPrincipal User currentUser) {
+	public ResponseEntity<Void> delete(@PathVariable Long id, @AuthenticationPrincipal CustomUserDetails userDetails) {
+		 User currentUser = userDetails.getUser();
 		personService.delete(id, currentUser);
 		return ResponseEntity.noContent().build();
 	}
