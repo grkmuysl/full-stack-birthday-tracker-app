@@ -1,8 +1,7 @@
+import { LoginPage } from "@/auth/LoginPage";
+import { RegisterPage } from "@/auth/RegisterPage";
 import { Routes, Route, Navigate } from "react-router-dom";
-
-function LoginPagePlaceholder() {
-  return <div>Login page </div>;
-}
+import { ProtectedRoute } from "./ProtectedRoute";
 
 function DashboardPlaceholder() {
   return <div>Dashboard page</div>;
@@ -11,8 +10,13 @@ function DashboardPlaceholder() {
 export function AppRoutes() {
   return (
     <Routes>
-      <Route path="/login" element={<LoginPagePlaceholder />} />
-      <Route path="/" element={<DashboardPlaceholder />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
+
+      <Route element={<ProtectedRoute />}>
+        <Route path="/" element={<DashboardPlaceholder />} />
+      </Route>
+
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
