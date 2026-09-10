@@ -37,4 +37,9 @@ export const contactsApi = {
   deletePerson: async (id: number): Promise<void> => {
     await apiClient.delete(`/people/${id}`);
   },
+
+  getPersonById: async (id: number): Promise<PersonResponse> => {
+    const { data } = await apiClient.get<PersonResponse>(`/people/${id}`);
+    return data;
+  },
 };
