@@ -2,10 +2,8 @@ import { LoginPage } from "@/auth/LoginPage";
 import { RegisterPage } from "@/auth/RegisterPage";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { ProtectedRoute } from "./ProtectedRoute";
-
-function DashboardPlaceholder() {
-  return <div>Dashboard page</div>;
-}
+import { DashboardPage } from "@/contacts/DashboardPage";
+import { AppLayout } from "./AppLayout";
 
 export function AppRoutes() {
   return (
@@ -14,7 +12,9 @@ export function AppRoutes() {
       <Route path="/register" element={<RegisterPage />} />
 
       <Route element={<ProtectedRoute />}>
-        <Route path="/" element={<DashboardPlaceholder />} />
+        <Route element={<AppLayout />}>
+          <Route path="/" element={<DashboardPage />} />
+        </Route>
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />
