@@ -5,24 +5,23 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "./AuthContext";
+import { toast } from "sonner";
 
 export function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    setError(null);
     setIsSubmitting(true);
     try {
       await login({ email, password });
       navigate("/");
     } catch {
-      setError("Email or password is incorrect.");
+      toast.error("Email or password is incorrect.");
     } finally {
       setIsSubmitting(false);
     }
@@ -56,7 +55,6 @@ export function LoginPage() {
                 required
               />
             </div>
-            {error && <p className="text-sm text-destructive">{error}</p>}
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting ? "Logging in..." : "Login"}
             </Button>

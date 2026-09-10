@@ -25,6 +25,7 @@ import {
 } from "./useContactMutations";
 import type { PersonRequest, PersonResponse } from "@/api/types";
 import { useCategories } from "@/categories/useCategories";
+import { toast } from "sonner";
 
 interface PersonFormDialogProps {
   open: boolean;
@@ -51,7 +52,6 @@ export function PersonFormDialog({
   const deletePerson = useDeletePerson();
 
   const [form, setForm] = useState<PersonRequest>(emptyForm);
-  const [error, setError] = useState<string | null>(null);
 
   const isEditMode = !!personToEdit;
   const isSubmitting = createPerson.isPending || updatePerson.isPending;
@@ -69,29 +69,36 @@ export function PersonFormDialog({
     } else {
       setForm(emptyForm);
     }
-    setError(null);
   }, [personToEdit, open]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    setError(null);
     try {
       if (isEditMode) {
         await updatePerson.mutateAsync({ id: personToEdit!.id, payload: form });
+        toast.success("Person updated successfully!");
       } else {
         await createPerson.mutateAsync(form);
+        toast.success("Person created successfully!");
       }
       onOpenChange(false);
     } catch {
-      setError("An error occurred while saving the person. Please try again.");
+      toast.error(
+        "An error occurred while saving the person. Please try again.",
+      );
     }
   };
 
   const handleDelete = async () => {
     if (!personToEdit) return;
     if (!confirm(`Is ${personToEdit.fullName} deleted?`)) return;
-    await deletePerson.mutateAsync(personToEdit.id);
-    onOpenChange(false);
+    try {
+      await deletePerson.mutateAsync(personToEdit.id);
+      toast.success("Person deleted successfully!");
+      onOpenChange(false);
+    } catch {
+      toast.error("Failed to delete the person.");
+    }
   };
 
   return (
@@ -165,8 +172,6 @@ export function PersonFormDialog({
               onChange={(e) => setForm({ ...form, note: e.target.value })}
             />
           </div>
-
-          {error && <p className="text-sm text-destructive">{error}</p>}
 
           <DialogFooter className="flex items-center justify-between sm:justify-between">
             {isEditMode ? (
