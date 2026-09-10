@@ -2,7 +2,7 @@ import { apiClient } from "@/api/axiosClient";
 import type { PagedResponse, PersonResponse } from "@/api/types";
 
 export interface GetPeopleParams {
-  category?: string;
+  category?: number;
   upcomingDays?: number;
   page?: number;
 }

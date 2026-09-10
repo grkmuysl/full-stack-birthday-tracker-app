@@ -1,5 +1,8 @@
 package com.gorkemuysal.birthdayTracker.contact;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -46,11 +49,25 @@ public class PersonServiceImpl implements PersonService {
 
 	@Override
 	public PagedResponse<PersonResponse> getAll(Long categoryId, Integer upcomingDays, Pageable pageable,
-			User currentUser) {
-	
-		Page<Person> page = personRepository.search(currentUser.getId(), categoryId, upcomingDays, pageable);
-		
-		return PagedResponse.from(page.map(personMapper::toResponse));
+	        User currentUser) {
+
+	    Page<Person> result;
+
+	    if (upcomingDays != null) {
+	        LocalDate today = LocalDate.now();
+	        LocalDate until = today.plusDays(upcomingDays);
+	        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("MM-dd");
+	        String fromMonthDay = today.format(fmt);
+	        String toMonthDay = until.format(fmt);
+
+	        result = personRepository.searchWithDateFilter(
+	                currentUser.getId(), categoryId, fromMonthDay, toMonthDay, pageable);
+	    } else {
+	        result = personRepository.searchWithoutDateFilter(
+	                currentUser.getId(), categoryId, pageable);
+	    }
+
+	    return PagedResponse.from(result.map(personMapper::toResponse));
 	}
 
 	@Override
