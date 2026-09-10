@@ -5,6 +5,8 @@ import { ProtectedRoute } from "./ProtectedRoute";
 import { DashboardPage } from "@/contacts/DashboardPage";
 import { AppLayout } from "./AppLayout";
 import { CategoriesPage } from "@/categories/CategoriesPage";
+import { ContactsPage } from "@/contacts/ContactsPage";
+import { ContactDetailPage } from "@/contacts/ContactDetailPage";
 
 export function AppRoutes() {
   return (
@@ -16,6 +18,8 @@ export function AppRoutes() {
         <Route element={<AppLayout />}>
           <Route path="/" element={<DashboardPage />} />
           <Route path="/categories" element={<CategoriesPage />} />
+          <Route path="/contacts" element={<ContactsPage />} />
+          <Route path="/contacts/:id" element={<ContactDetailPage />} />
         </Route>
       </Route>
 
