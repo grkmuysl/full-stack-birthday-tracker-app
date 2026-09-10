@@ -24,3 +24,11 @@ export interface PagedResponse<T> {
   totalPages: number;
   last: boolean;
 }
+
+export interface PersonRequest {
+  fullName: string;
+  birthDate: string; // "YYYY-MM-DD"
+  birthYearKnown: boolean;
+  categoryId: number | null;
+  note: string | null;
+}
