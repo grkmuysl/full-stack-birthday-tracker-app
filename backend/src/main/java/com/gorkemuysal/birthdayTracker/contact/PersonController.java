@@ -2,6 +2,7 @@ package com.gorkemuysal.birthdayTracker.contact;
 
 
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -49,7 +50,7 @@ public class PersonController {
 	public ResponseEntity<PagedResponse<PersonResponse>> getAll(
 			@RequestParam(required = false) Long category,
 			@RequestParam(required = false) Integer upcomingDays,
-			Pageable pageable,
+			@PageableDefault(size = 8) Pageable pageable,
 			@AuthenticationPrincipal CustomUserDetails userDetails) {
 		 User currentUser = userDetails.getUser();
 		return ResponseEntity.ok(personService.getAll(category, upcomingDays, pageable, currentUser));
