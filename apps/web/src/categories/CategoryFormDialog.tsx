@@ -16,6 +16,7 @@ import {
 } from "./useCategoryMutations";
 import type { CategoryResponse } from "@/api/types";
 import type { CategoryRequest } from "./categoriesApi";
+import { toast } from "sonner";
 
 interface CategoryFormDialogProps {
   open: boolean;
@@ -35,7 +36,6 @@ export function CategoryFormDialog({
   const deleteCategory = useDeleteCategory();
 
   const [form, setForm] = useState<CategoryRequest>(emptyForm);
-  const [error, setError] = useState<string | null>(null);
 
   const isEditMode = !!categoryToEdit;
   const isSubmitting = createCategory.isPending || updateCategory.isPending;
@@ -46,24 +46,26 @@ export function CategoryFormDialog({
     } else {
       setForm(emptyForm);
     }
-    setError(null);
   }, [categoryToEdit, open]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    setError(null);
     try {
       if (isEditMode) {
         await updateCategory.mutateAsync({
           id: categoryToEdit!.id,
           payload: form,
         });
+        toast.success("Category updated successfully!");
       } else {
         await createCategory.mutateAsync(form);
+        toast.success("Category created successfully!");
       }
       onOpenChange(false);
     } catch {
-      setError("An error occurred while saving the category.");
+      toast.error(
+        "An error occurred while saving the category. Please try again.",
+      );
     }
   };
 
@@ -72,9 +74,10 @@ export function CategoryFormDialog({
     if (!confirm(`Delete "${categoryToEdit.name}" category?`)) return;
     try {
       await deleteCategory.mutateAsync(categoryToEdit.id);
+      toast.success("Category deleted successfully!");
       onOpenChange(false);
     } catch {
-      setError("An error occurred while deleting the category.");
+      toast.error("An error occurred while deleting the category.");
     }
   };
 
@@ -114,8 +117,6 @@ export function CategoryFormDialog({
               </span>
             </div>
           </div>
-
-          {error && <p className="text-sm text-destructive">{error}</p>}
 
           <DialogFooter className="flex items-center justify-between sm:justify-between">
             {isEditMode ? (

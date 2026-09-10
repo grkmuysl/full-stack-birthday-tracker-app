@@ -1,5 +1,6 @@
 import axios from "axios";
 import { tokenStorage } from "@/lib/tokenStorage";
+import { toast } from "sonner";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -46,6 +47,7 @@ apiClient.interceptors.response.use(
         return apiClient(originalRequest);
       } catch (refreshError) {
         tokenStorage.clear();
+        toast.error("Token expired. Please log in again.");
         window.location.href = "/login";
         return Promise.reject(refreshError);
       } finally {
