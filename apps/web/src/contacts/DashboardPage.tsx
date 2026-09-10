@@ -8,19 +8,29 @@ import { usePeople } from "./usePeople";
 import { PersonCard } from "./PersonCard";
 import { PersonFormDialog } from "./PersonFormDialog";
 import { useCategories } from "@/categories/useCategories";
+import { PaginationFooter } from "@/components/PaginationFooter";
 
 const ALL_TAB = "all";
 
 export function DashboardPage() {
   const navigate = useNavigate();
   const [activeCategory, setActiveCategory] = useState(ALL_TAB);
+  const [page, setPage] = useState(0);
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const { data: categories } = useCategories();
 
   const { data, isLoading, isError } = usePeople({
     category: activeCategory === ALL_TAB ? undefined : Number(activeCategory),
+    page,
   });
+
+  console.log("paged response:", data);
+
+  const handleCategoryChange = (value: string) => {
+    setActiveCategory(value);
+    setPage(0);
+  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -28,11 +38,11 @@ export function DashboardPage() {
         <h1 className="text-2xl font-semibold">Upcoming Birthdays</h1>
         <Button onClick={() => setDialogOpen(true)}>
           <Plus className="h-4 w-4 mr-1" />
-          Kişi Ekle
+          Add Person
         </Button>
       </div>
 
-      <Tabs value={activeCategory} onValueChange={setActiveCategory}>
+      <Tabs value={activeCategory} onValueChange={handleCategoryChange}>
         <TabsList>
           <TabsTrigger value={ALL_TAB}>All</TabsTrigger>
           {categories?.map((cat) => (
@@ -62,17 +72,26 @@ export function DashboardPage() {
       )}
 
       {data && data.content.length > 0 && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {data.content.map((person) => (
-            <button
-              key={person.id}
-              onClick={() => navigate(`/contacts/${person.id}`)}
-              className="text-left"
-            >
-              <PersonCard person={person} />
-            </button>
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {data.content.map((person) => (
+              <button
+                key={person.id}
+                onClick={() => navigate(`/contacts/${person.id}`)}
+                className="text-left"
+              >
+                <PersonCard person={person} />
+              </button>
+            ))}
+          </div>
+
+          <PaginationFooter
+            page={data.pageNumber}
+            totalPages={data.totalPages}
+            totalElements={data.totalElements}
+            onPageChange={setPage}
+          />
+        </>
       )}
 
       <PersonFormDialog
