@@ -1,50 +1,43 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePeople } from "./usePeople";
 import { PersonCard } from "./PersonCard";
-import type { PersonResponse } from "@/api/types";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
 import { PersonFormDialog } from "./PersonFormDialog";
+import { useCategories } from "@/categories/useCategories";
 
-const categories = ["All", "Family", "Friends", "Work"];
+const ALL_TAB = "all";
 
 export function DashboardPage() {
-  const [activeCategory, setActiveCategory] = useState("All");
+  const navigate = useNavigate();
+  const [activeCategory, setActiveCategory] = useState(ALL_TAB);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [personToEdit, setPersonToEdit] = useState<PersonResponse | null>(null);
+
+  const { data: categories } = useCategories();
 
   const { data, isLoading, isError } = usePeople({
-    category:
-      activeCategory === "All" ? undefined : categories.indexOf(activeCategory),
+    category: activeCategory === ALL_TAB ? undefined : Number(activeCategory),
   });
-
-  const openCreateDialog = () => {
-    setPersonToEdit(null);
-    setDialogOpen(true);
-  };
-
-  const openEditDialog = (person: PersonResponse) => {
-    setPersonToEdit(person);
-    setDialogOpen(true);
-  };
 
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Upcoming Birthdays</h1>
-        <Button onClick={openCreateDialog}>
+        <Button onClick={() => setDialogOpen(true)}>
           <Plus className="h-4 w-4 mr-1" />
-          Add Person
+          Kişi Ekle
         </Button>
       </div>
 
       <Tabs value={activeCategory} onValueChange={setActiveCategory}>
         <TabsList>
-          {categories.map((cat) => (
-            <TabsTrigger key={cat} value={cat}>
-              {cat}
+          <TabsTrigger value={ALL_TAB}>All</TabsTrigger>
+          {categories?.map((cat) => (
+            <TabsTrigger key={cat.id} value={cat.id.toString()}>
+              {cat.name}
             </TabsTrigger>
           ))}
         </TabsList>
@@ -60,12 +53,12 @@ export function DashboardPage() {
 
       {isError && (
         <p className="text-sm text-destructive">
-          An error occurred while fetching contacts. Please try again later.
+          An error occurred while fetching people. Please try again later.
         </p>
       )}
 
       {data && data.content.length === 0 && (
-        <p className="text-sm text-muted-foreground">No contacts found.</p>
+        <p className="text-sm text-muted-foreground">No people found.</p>
       )}
 
       {data && data.content.length > 0 && (
@@ -73,7 +66,7 @@ export function DashboardPage() {
           {data.content.map((person) => (
             <button
               key={person.id}
-              onClick={() => openEditDialog(person)}
+              onClick={() => navigate(`/contacts/${person.id}`)}
               className="text-left"
             >
               <PersonCard person={person} />
@@ -85,7 +78,7 @@ export function DashboardPage() {
       <PersonFormDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
-        personToEdit={personToEdit}
+        personToEdit={null}
       />
     </div>
   );
