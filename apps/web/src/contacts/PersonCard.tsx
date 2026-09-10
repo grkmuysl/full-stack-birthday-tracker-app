@@ -30,6 +30,10 @@ export function PersonCard({ person }: { person: PersonResponse }) {
             <Badge
               variant="secondary"
               className={categoryColorClass[person.category.name] ?? ""}
+              style={{
+                backgroundColor: person.category?.color + "33",
+                color: person.category?.color,
+              }}
             >
               {person.category.name}
             </Badge>
