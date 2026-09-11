@@ -11,8 +11,9 @@ import {
 import { Link } from "expo-router";
 import { useAuth } from "@/features/auth/AuthContext";
 
-export default function LoginScreen() {
-  const { login } = useAuth();
+export default function RegisterScreen() {
+  const { register } = useAuth();
+  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -22,9 +23,9 @@ export default function LoginScreen() {
     setError(null);
     setIsSubmitting(true);
     try {
-      await login({ email, password });
+      await register({ fullName, email, password });
     } catch {
-      setError("Email or password is incorrect.");
+      setError("Failed to create account. Email might already be in use.");
     } finally {
       setIsSubmitting(false);
     }
@@ -37,8 +38,17 @@ export default function LoginScreen() {
     >
       <View className="flex-1 justify-center px-6 gap-4">
         <Text className="text-2xl font-bold text-center mb-4">
-          Login to Birthday Tracker
+          Create Account
         </Text>
+
+        <View className="gap-2">
+          <Text className="text-sm text-gray-600">Full Name</Text>
+          <TextInput
+            className="border border-gray-300 rounded-lg px-4 py-3"
+            value={fullName}
+            onChangeText={setFullName}
+          />
+        </View>
 
         <View className="gap-2">
           <Text className="text-sm text-gray-600">Email</Text>
@@ -52,7 +62,7 @@ export default function LoginScreen() {
         </View>
 
         <View className="gap-2">
-          <Text className="text-sm text-gray-600">Password</Text>
+          <Text className="text-sm text-gray-600">Şifre</Text>
           <TextInput
             className="border border-gray-300 rounded-lg px-4 py-3"
             secureTextEntry
@@ -71,14 +81,14 @@ export default function LoginScreen() {
           {isSubmitting ? (
             <ActivityIndicator color="white" />
           ) : (
-            <Text className="text-white font-semibold">Login</Text>
+            <Text className="text-white font-semibold">Register</Text>
           )}
         </TouchableOpacity>
 
         <View className="flex-row justify-center gap-1 mt-2">
-          <Text className="text-gray-600">Don't have an account?</Text>
-          <Link href="/(auth)/register">
-            <Text className="text-orange-500 font-medium">Sign up</Text>
+          <Text className="text-gray-600">Already have an account?</Text>
+          <Link href="/(auth)/login">
+            <Text className="text-orange-500 font-medium">Sign in</Text>
           </Link>
         </View>
       </View>
