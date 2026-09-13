@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import {
   View,
   Text,
@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { usePeople } from "@/features/contacts/usePeople";
 import { daysUntilNextBirthday, formatDaysToGo } from "@/lib/birthdayUtils";
 import { PersonResponse } from "@/api/types";
@@ -15,7 +15,13 @@ import { PersonResponse } from "@/api/types";
 export default function ContactsScreen() {
   const router = useRouter();
   const [search, setSearch] = useState("");
-  const { data, isLoading, isError } = usePeople();
+  const { data, isLoading, isError, refetch } = usePeople();
+
+  useFocusEffect(
+    useCallback(() => {
+      refetch();
+    }, [refetch]),
+  );
 
   const filtered = data?.content.filter((p) =>
     p.fullName.toLowerCase().includes(search.toLowerCase()),

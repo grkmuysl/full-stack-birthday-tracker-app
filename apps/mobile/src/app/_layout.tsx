@@ -36,6 +36,14 @@ function RootNavigation() {
       <Stack.Screen name="(auth)" options={{ headerShown: false }} />
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="contacts/[id]" options={{ title: "Person Detail" }} />
+      <Stack.Screen
+        name="person-form"
+        options={{ presentation: "modal", title: "Person Form" }}
+      />
+      <Stack.Screen
+        name="category-form"
+        options={{ presentation: "modal", title: "Category Form" }}
+      />
     </Stack>
   );
 }

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import {
   View,
   Text,
@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { usePeople } from "@/features/contacts/usePeople";
 import { useCategories } from "@/features/categories/useCategories";
 import { PersonCard } from "@/features/contacts/PersonCard";
@@ -19,9 +19,26 @@ export default function DashboardScreen() {
   const [activeCategory, setActiveCategory] = useState(ALL_TAB);
 
   const { data: categories } = useCategories();
-  const { data, isLoading, isError } = usePeople({
+  const { data, isLoading, isError, refetch } = usePeople({
     category: activeCategory === ALL_TAB ? undefined : Number(activeCategory),
   });
+
+  console.log(
+    "activeCategory:",
+    activeCategory,
+    "totalElements:",
+    data?.totalElements,
+    "content.length:",
+    data?.content.length,
+    "pageSize:",
+    data?.pageSize,
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      refetch();
+    }, [refetch]),
+  );
 
   const tabs = [{ id: ALL_TAB, name: "All" }, ...(categories ?? [])];
 
@@ -29,6 +46,12 @@ export default function DashboardScreen() {
     <View className="flex-1 bg-gray-50">
       <View className="px-4 pt-4 pb-2 flex-row items-center justify-between">
         <Text className="text-2xl font-bold">Upcoming Birthdays</Text>
+        <TouchableOpacity
+          className="bg-orange-500 rounded-lg px-4 py-2 flex-row items-center gap-1"
+          onPress={() => router.push("/person-form")}
+        >
+          <Text className="text-white font-medium">+ Add Person</Text>
+        </TouchableOpacity>
       </View>
 
       <View className="px-4 pb-3">

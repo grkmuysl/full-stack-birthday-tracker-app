@@ -1,5 +1,11 @@
-import { View, Text, ActivityIndicator, ScrollView } from "react-native";
-import { useLocalSearchParams } from "expo-router";
+import {
+  View,
+  Text,
+  ActivityIndicator,
+  ScrollView,
+  TouchableOpacity,
+} from "react-native";
+import { router, useLocalSearchParams } from "expo-router";
 import { usePerson } from "@/features/contacts/usePerson";
 import { daysUntilNextBirthday, formatDaysToGo } from "@/lib/birthdayUtils";
 
@@ -45,6 +51,12 @@ export default function ContactDetailScreen() {
           </Text>
           <Text className="text-white/90">{formatDaysToGo(days)}</Text>
         </View>
+        <TouchableOpacity
+          className="bg-white/20 rounded-lg px-3 py-2"
+          onPress={() => router.push(`/person-form?id=${person.id}`)}
+        >
+          <Text className="text-white font-medium">Edit</Text>
+        </TouchableOpacity>
       </View>
 
       <View className="p-6 gap-5">
