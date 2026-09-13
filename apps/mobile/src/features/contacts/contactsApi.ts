@@ -1,5 +1,5 @@
 import { apiClient } from "@/api/axiosClient";
-import { PagedResponse, PersonResponse } from "@/api/types";
+import { PagedResponse, PersonRequest, PersonResponse } from "@/api/types";
 
 export interface GetPeopleParams {
   category?: number;
@@ -20,5 +20,23 @@ export const contactsApi = {
   getPersonById: async (id: number): Promise<PersonResponse> => {
     const { data } = await apiClient.get<PersonResponse>(`/people/${id}`);
     return data;
+  },
+
+  createPerson: async (payload: PersonRequest): Promise<PersonResponse> => {
+    const { data } = await apiClient.post<PersonResponse>("/people", payload);
+    return data;
+  },
+  updatePerson: async (
+    id: number,
+    payload: PersonRequest,
+  ): Promise<PersonResponse> => {
+    const { data } = await apiClient.put<PersonResponse>(
+      `/people/${id}`,
+      payload,
+    );
+    return data;
+  },
+  deletePerson: async (id: number): Promise<void> => {
+    await apiClient.delete(`/people/${id}`);
   },
 };
