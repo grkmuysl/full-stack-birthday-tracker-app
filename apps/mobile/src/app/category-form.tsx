@@ -20,6 +20,7 @@ import { CategoryRequest } from "@/features/categories/categoriesApi";
 const PRESET_COLORS = [
   "#F97316",
   "#14B8A6",
+  "#8B5CF6",
   "#EF4444",
   "#3B82F6",
   "#EAB308",
