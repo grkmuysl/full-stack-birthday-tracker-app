@@ -12,7 +12,7 @@ export function PersonCard({ person }: { person: PersonResponse }) {
     .toUpperCase();
 
   return (
-    <View className="flex-1 bg-white rounded-xl border border-gray-200 p-4 gap-3 m-1.5">
+    <View className="flex-1 bg-white rounded-xl border border-gray-200 p-6 gap-3 m-1.5 shadow-sm">
       <View className="flex-row items-center gap-3">
         <View className="h-10 w-10 rounded-full bg-orange-100 items-center justify-center">
           <Text className="text-orange-600 font-semibold">{initials}</Text>

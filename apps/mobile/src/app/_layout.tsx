@@ -1,6 +1,6 @@
 import "../../global.css";
 import { useEffect } from "react";
-import { Slot, useRouter, useSegments } from "expo-router";
+import { Stack, useRouter, useSegments } from "expo-router";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { AuthProvider, useAuth } from "@/features/auth/AuthContext";
@@ -31,7 +31,13 @@ function RootNavigation() {
     );
   }
 
-  return <Slot />;
+  return (
+    <Stack>
+      <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen name="contacts/[id]" options={{ title: "Person Detail" }} />
+    </Stack>
+  );
 }
 
 export default function RootLayout() {
