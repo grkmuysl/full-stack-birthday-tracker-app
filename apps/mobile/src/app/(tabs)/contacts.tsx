@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -7,15 +7,24 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from "react-native";
-import { useFocusEffect, useRouter } from "expo-router";
-import { usePeople } from "@/features/contacts/usePeople";
+import { useRouter, useFocusEffect } from "expo-router";
+import { useInfinitePeople } from "@/features/contacts/useInfinitePeople";
 import { daysUntilNextBirthday, formatDaysToGo } from "@/lib/birthdayUtils";
 import { PersonResponse } from "@/api/types";
 
 export default function ContactsScreen() {
   const router = useRouter();
   const [search, setSearch] = useState("");
-  const { data, isLoading, isError, refetch } = usePeople();
+
+  const {
+    data,
+    isLoading,
+    isError,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfinitePeople();
 
   useFocusEffect(
     useCallback(() => {
@@ -23,7 +32,11 @@ export default function ContactsScreen() {
     }, [refetch]),
   );
 
-  const filtered = data?.content.filter((p) =>
+  const people = useMemo(
+    () => data?.pages.flatMap((page) => page.content) ?? [],
+    [data],
+  );
+  const filtered = people.filter((p) =>
     p.fullName.toLowerCase().includes(search.toLowerCase()),
   );
 
@@ -51,19 +64,28 @@ export default function ContactsScreen() {
         </Text>
       )}
 
-      {filtered && filtered.length === 0 && (
+      {!isLoading && filtered.length === 0 && (
         <Text className="text-center text-gray-500 mt-4">
           No matching contacts found.
         </Text>
       )}
 
-      {filtered && filtered.length > 0 && (
+      {filtered.length > 0 && (
         <FlatList
           data={filtered}
           keyExtractor={(item) => item.id.toString()}
           ItemSeparatorComponent={() => (
             <View className="h-px bg-gray-100 ml-16" />
           )}
+          onEndReached={() => {
+            if (hasNextPage) fetchNextPage();
+          }}
+          onEndReachedThreshold={0.5}
+          ListFooterComponent={
+            isFetchingNextPage ? (
+              <ActivityIndicator className="my-4" color="#f97316" />
+            ) : null
+          }
           renderItem={({ item }: { item: PersonResponse }) => {
             const days = daysUntilNextBirthday(item.birthDate);
             const initials = item.fullName

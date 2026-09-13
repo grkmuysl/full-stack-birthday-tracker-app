@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -6,8 +6,8 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from "react-native";
-import { useFocusEffect, useRouter } from "expo-router";
-import { usePeople } from "@/features/contacts/usePeople";
+import { useRouter, useFocusEffect } from "expo-router";
+import { useInfinitePeople } from "@/features/contacts/useInfinitePeople";
 import { useCategories } from "@/features/categories/useCategories";
 import { PersonCard } from "@/features/contacts/PersonCard";
 import { PersonResponse } from "@/api/types";
@@ -19,25 +19,27 @@ export default function DashboardScreen() {
   const [activeCategory, setActiveCategory] = useState(ALL_TAB);
 
   const { data: categories } = useCategories();
-  const { data, isLoading, isError, refetch } = usePeople({
+  const {
+    data,
+    isLoading,
+    isError,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfinitePeople({
     category: activeCategory === ALL_TAB ? undefined : Number(activeCategory),
   });
-
-  console.log(
-    "activeCategory:",
-    activeCategory,
-    "totalElements:",
-    data?.totalElements,
-    "content.length:",
-    data?.content.length,
-    "pageSize:",
-    data?.pageSize,
-  );
 
   useFocusEffect(
     useCallback(() => {
       refetch();
     }, [refetch]),
+  );
+
+  const people = useMemo(
+    () => data?.pages.flatMap((page) => page.content) ?? [],
+    [data],
   );
 
   const tabs = [{ id: ALL_TAB, name: "All" }, ...(categories ?? [])];
@@ -90,22 +92,31 @@ export default function DashboardScreen() {
 
       {isError && (
         <Text className="text-center text-red-500 mt-4">
-          An error occurred while fetching data. Please try again later.
+          An error occurred while fetching contacts. Please try again later.
         </Text>
       )}
 
-      {data && data.content.length === 0 && (
+      {!isLoading && people.length === 0 && (
         <Text className="text-center text-gray-500 mt-4">
-          No people added yet.
+          No contacts available.
         </Text>
       )}
 
-      {data && data.content.length > 0 && (
+      {people.length > 0 && (
         <FlatList
-          data={data.content}
+          data={people}
           numColumns={2}
           keyExtractor={(item) => item.id.toString()}
           contentContainerClassName="px-2.5 pb-4"
+          onEndReached={() => {
+            if (hasNextPage) fetchNextPage();
+          }}
+          onEndReachedThreshold={0.5}
+          ListFooterComponent={
+            isFetchingNextPage ? (
+              <ActivityIndicator className="my-4" color="#f97316" />
+            ) : null
+          }
           renderItem={({ item }: { item: PersonResponse }) => (
             <TouchableOpacity
               className="flex-1"
