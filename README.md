@@ -614,6 +614,11 @@ Bu projede backend, web ve mobil katmanlarını tek bir ürün akışı içinde 
 - Apache Kafka ile servisler arası event-driven iletişim
 - Bağımsız deploy edilebilen, tek sorumluluğa sahip bir bildirim servisi ile mikroservis mimarisine giriş
 
+## Bilinen Sınırlamalar / Gelecek İyileştirmeler
+
+- `BirthdayCheckJob` tarafında henüz idempotency kontrolü yok; aynı kişi için aynı gün birden fazla event üretilebilir. `outbox_events` tablosuna `(person_id, tarih)` bazlı bir unique constraint veya "bugün zaten gönderildi mi" kontrolü eklenmesi planlanıyor.
+- Outbox pattern şu an polling (`@Scheduled(fixedDelay = 5000)`) ile çalışıyor. İleride Debezium ile CDC tabanlı bir outbox geçişi değerlendirilebilir.
+
 ## Lisans
 
 Bu proje kişisel gelişim ve öğrenme amacıyla geliştirilmiştir.
