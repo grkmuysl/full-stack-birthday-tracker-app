@@ -8,7 +8,7 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "outbox_event")
+@Table(name = "outbox_events")
 @Getter
 @Setter
 @NoArgsConstructor
