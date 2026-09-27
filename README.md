@@ -25,6 +25,8 @@ Bu proje, Spring Boot tabanlı backend geliştirme deneyimini React web uygulama
 - Flyway ile versiyonlanmış veritabanı migration'ları
 - Swagger UI ve OpenAPI dokümantasyonu
 - PostgreSQL'in Docker Compose ile yerel geliştirme ortamında çalıştırılması
+- Yaklaşan doğum günleri için outbox pattern ile Kafka'ya event üretimi
+- E-posta bildirimlerinin ayrı bir `notification-service` uygulaması tarafından, Kafka üzerinden tüketilerek gönderilmesi (retry + Dead Letter Topic ile)
 
 ## Uygulama Mimarisi
 
@@ -38,6 +40,8 @@ birthdayTracker/
 │   └── mobile/ # Expo + React Native mobil uygulaması
 └── README.md
 ```
+
+Doğum günü e-posta bildirimleri ise bu repodan bağımsız, ayrı bir repoda geliştirilen `notification-service` uygulaması tarafından gönderilir. İki uygulama arasındaki tek bağlantı Kafka'dır; `notification-service`, bu backend'in veritabanına veya API'sine doğrudan erişmez.
 
 ### İstek akışı
 
@@ -57,6 +61,27 @@ Repository / JPA
 PostgreSQL
 ```
 
+### Doğum günü bildirim akışı
+
+```text
+BirthdayCheckJob (@Scheduled, günlük)
+    │  yaklaşan doğum günü var mı?
+    ▼
+outbox_events (PostgreSQL, PENDING)
+    │
+    │  OutboxPoller (@Scheduled, 5sn)
+    ▼
+birthday.upcoming (Kafka topic)
+    │
+    ▼
+notification-service (ayrı repo, Kafka consumer)
+    │  retry + DLT
+    ▼
+SMTP (e-posta gönderimi)
+```
+
+Bu backend, `BirthdayCheckJob` ile eşiğin (varsayılan 7 gün) altındaki doğum günlerini tespit eder ve doğrudan Kafka'ya yazmak yerine aynı veritabanı transaction'ı içinde `outbox_events` tablosuna kaydeder (outbox pattern). Ayrı bir `OutboxPoller`, bekleyen (`PENDING`) kayıtları periyodik olarak `birthday.upcoming` topic'ine yayınlar ve başarılı olanları `PUBLISHED` olarak işaretler. E-postanın üretilmesi ve gönderilmesi, retry/DLT dahil tamamen `notification-service` sorumluluğundadır; detaylar için o projenin README dosyasına bakın.
+
 ### Backend paket yapısı
 
 ```text
@@ -68,7 +93,9 @@ backend/src/main/java/com/gorkemuysal/birthdayTracker/
 │   └── PagedResponse.java
 ├── config/
 │   ├── JpaAuditingConfig.java
-│   └── OpenApiConfig.java
+│   ├── OpenApiConfig.java
+│   ├── KafkaConfig.java          # Kafka producer bean'leri
+│   └── KafkaProducerConfig.java
 ├── contact/
 │   ├── Category.java
 │   ├── CategoryController.java
@@ -78,13 +105,22 @@ backend/src/main/java/com/gorkemuysal/birthdayTracker/
 │   ├── PersonService.java
 │   ├── dto/
 │   └── mapper/
-└── identity/
-    ├── AuthController.java
-    ├── AuthService.java
-    ├── User.java
-    ├── RefreshToken.java
-    ├── dto/
-    └── security/
+├── identity/
+│   ├── AuthController.java
+│   ├── AuthService.java
+│   ├── User.java
+│   ├── RefreshToken.java
+│   ├── dto/
+│   └── security/
+└── notification/
+    ├── BirthdayCheckJob.java        // Yaklaşan doğum günlerini tespit eden @Scheduled job
+    ├── BirthdayCalculator.java      // Doğum gününe kalan gün hesabı
+    ├── OutboxEvent.java             // outbox_events tablosunun entity'si
+    ├── OutboxEventRepository.java
+    ├── OutboxStatus.java            // PENDING / PUBLISHED
+    ├── OutboxPoller.java            // Bekleyen outbox kayıtlarını Kafka'ya yayınlar
+    ├── BirthdayEventProducer.java   // Kafka producer servisi
+    └── UpcomingBirthdayEvent.java   // Kafka'ya gönderilen event DTO'su
 ```
 
 ## Kullanılan Teknolojiler
@@ -97,6 +133,7 @@ backend/src/main/java/com/gorkemuysal/birthdayTracker/
 - Spring Data JPA / Hibernate
 - Spring Security
 - PostgreSQL 17
+- Apache Kafka (Spring Kafka) — outbox event'lerinin yayınlanması
 - Flyway
 - JJWT 0.12.6
 - MapStruct 1.5.5
@@ -176,6 +213,18 @@ Doğum günü takip edilecek kişiyi temsil eder.
 | `ownerId` | Kaydın sahibi |
 
 Kişi silindiğinde kategori silinmez; kişi-kategori ilişkisi kaldırılır. Kategori silindiğinde o kategoriye bağlı kişilerin `category` alanı boş hale gelir.
+
+### OutboxEvent
+
+Outbox pattern için kullanılan, henüz Kafka'ya yayınlanmamış veya yayınlanmış event kayıtlarını tutar.
+
+| Alan | Açıklama |
+| --- | --- |
+| `id` | Event kimliği |
+| `topic` | Hedef Kafka topic'i, ör. `birthday.upcoming` |
+| `payload` | JSON serileştirilmiş event içeriği |
+| `status` | `PENDING` veya `PUBLISHED` |
+| `createdAt` / `publishedAt` | Oluşturulma ve yayınlanma zamanları |
 
 ## Kimlik Doğrulama
 
@@ -342,7 +391,8 @@ backend/src/main/resources/db/migration/
 ├── V1__create_users_table.sql
 ├── V2__create_refresh_tokens_table.sql
 ├── V3__create_categories_table.sql
-└── V4__create_persons_table.sql
+├── V4__create_persons_table.sql
+└── V5__create_outbox_event.sql
 ```
 
 Hibernate `ddl-auto=validate` modunda çalışır. Böylece veritabanı şeması uygulama başlarken doğrulanır; tablo değişiklikleri migration dosyaları üzerinden takip edilir.
@@ -385,12 +435,14 @@ export JWT_EXPIRATION="900000"
 
 `JWT_EXPIRATION` milisaniye cinsindendir. Access token süresi uygulama ayarlarında 15 dakika, refresh token süresi 7 gün olarak tanımlıdır.
 
-### 3. PostgreSQL'i başlatma
+### 3. PostgreSQL ve Kafka'yı başlatma
 
 ```bash
 cd backend
 docker compose up -d
 ```
+
+Bu komut PostgreSQL'in yanı sıra Kafka ve Kafka UI konteynerlerini de ayağa kaldırır (`backend/compose.yaml`).
 
 Yerel PostgreSQL bağlantısı:
 
@@ -401,6 +453,13 @@ Yerel PostgreSQL bağlantısı:
 | Database | `birthdaytracker` |
 | Kullanıcı | `postgres` |
 | Şifre | `local_dev_only` |
+
+| Araç | Adres | Amaç |
+| --- | --- | --- |
+| Kafka broker | `localhost:9092` | Backend'in ve `notification-service`'in bağlandığı Kafka adresi |
+| Kafka UI | http://localhost:8090 | Topic'leri ve mesajları izleme |
+
+E-posta bildirimlerinin gerçekten gönderilmesini görmek için ayrı repodaki `notification-service` uygulamasının da aynı Kafka broker'ına (`localhost:9092`) bağlı şekilde çalışıyor olması gerekir; kurulum adımları o projenin README dosyasındadır.
 
 ### 4. Backend'i çalıştırma
 
@@ -551,6 +610,9 @@ Bu projede backend, web ve mobil katmanlarını tek bir ürün akışı içinde 
 - React Query ile server-state yönetimi
 - React Router ve Expo Router ile platforma uygun navigasyon
 - Web ve mobil istemcilerde ortak API sözleşmesinin kullanılması
+- Outbox pattern ile transactional event üretimi
+- Apache Kafka ile servisler arası event-driven iletişim
+- Bağımsız deploy edilebilen, tek sorumluluğa sahip bir bildirim servisi ile mikroservis mimarisine giriş
 
 ## Lisans
 
